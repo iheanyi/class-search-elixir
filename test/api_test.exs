@@ -3,7 +3,6 @@ defmodule APITest do
 
   setup do
     #API.initialize
-    
     :ok
   end
 
@@ -28,6 +27,11 @@ defmodule APITest do
     # certain structure as well? That'd be helpful.
     assert is_list(terms)
     assert (length terms) > 0
+    terms 
+    |> Enum.map(fn term ->
+      assert (is_atom term['name'])
+      assert (is_atom term['value'])
+    end)
   end
 
   test "fetch_departments returns the departments" do
@@ -35,5 +39,24 @@ defmodule APITest do
 
     assert is_list(depts)
     assert (length depts) > 0
+    depts
+    |> Enum.map(fn dept -> 
+      assert (is_atom dept["name"])
+      assert (is_atom  dept["value"]) 
+    end
+    )
+  end
+
+  test "fetch_term_dept_html returns the html" do 
+    dept = API.fetch_departments()
+    |> List.wrap
+    |> List.first
+    term = API.fetch_terms()
+    |> List.wrap
+    |> List.first
+   
+    html = API.fetch_term_dept_html(term[:value], dept[:value])
+
+    assert String.length(html) > 0
   end
 end
