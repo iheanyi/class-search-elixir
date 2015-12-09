@@ -59,19 +59,19 @@ defmodule API do
   Fetches the HTML for the designated term and dept
   """
   def fetch_term_dept_html(term, dept) do
+      content_type = %{"Content-type" => "application/x-www-form-urlencoded"}
       html =
-      HTTPoison.post!("#{@base_url}?TERM=201600&DIVS=A&CAMPUS=M&SUBJ=ACCT&ATTR=0ANY&CREDIT=A",
-      "{
-        \"TERM\": 201600,
-        \"DIVS\": A,
-        \"CAMPUS\": M,
-        \"SUBJ\": ACCT,
-        \"ATTR\": 0ANY,
-        \"CREDIT\": A,
-      }",
-      ["Content-Type":
-      "application/x-www-form-urlencoded"]
-    )
+      HTTPoison.post!(@base_url,
+      {:form , [
+          "TERM": "201600",
+          "DIVS": "A",
+          "CAMPUS": "M",
+          "SUBJ": "ACCT",
+          "ATTR": "0ANY",
+          "CREDIT": "A",
+        ]},
+        content_type
+      ).body
 
   end
 
