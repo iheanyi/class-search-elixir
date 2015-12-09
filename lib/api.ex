@@ -72,7 +72,66 @@ defmodule API do
         ]},
         content_type
       ).body
+      
+      course_sections = Floki.find(html, "#resulttable tbody tr")
 
+      course_sections
+      |> Enum.map(fn section -> 
+        IO.puts Floki.text(section)
+        #IO.puts section[1]
+      end
+      )
+
+      # Each Cell/Index
+      # (0) Course Section and Course Number, also has URL link to the books
+      # relevant to that section in Hammes Bookstore.
+      # (1) Title of the course.
+      # (2) Number of credits for the course.
+      # (3) Status of the course seats (OP for open, CL for closed).
+      # (4) Max number of seats.
+      # (5) Open number of seats.
+      # (6) Cross-Listed?
+      # (7) CRN for the course. 
+      # (8) Syllabus for the course
+      # (9) Instructor for the course!
+      # (10) When the course meets, course start time.
+      # * Note, these may be prone to having more than one start time, so we
+      # have to think of how to show / reflect this in the user interface for
+      # various sub-sections. Design flaw on ND's part. -_- 
+      # (11) Begin/Start date for the course.
+      # (12) End date for the course.
+      # (13) Course Location.
+
+      # First Cell
+      {tag, attrs, first_section} = Enum.at(course_sections, 0)
+      {_, _, first_cell} = Enum.at(first_section, 0)
+      {_, _, course_num_section_text} = Enum.at(first_cell, 0)
+      {_, course_books_link_tag, _} = Enum.at(first_cell, 2)
+      # Prints out the course number and the section number. O_O
+      course_num_section = List.first(course_num_section_text)
+      {_, course_books_link} = Enum.at(course_books_link_tag, 0)
+      course_books_link
+      [course_num, course_section] = String.split(course_num_section," - ", trim: true)
+ 
+      # Second Cell
+      {_, _, second_section} = Enum.at(course_sections, 1)
+      {_, _, second_cell} = Enum.at(second_section, 1)
+      course_title = List.first(second_cell)
+      #{_, _, course_title_text} = Enum.at(second_cell, 0)
+      #course_title = List.first(course_title_text)
+
+      IO.puts "#{course_num} - #{course_section} - #{course_title}"
+  end
+
+  @doc """
+  Fetches the courses for every single term and department.
+  """
+  def fetch_all_courses() do 
+
+  end
+
+  def process_course_html(html) do 
+  
   end
 
   @doc """
