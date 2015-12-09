@@ -161,6 +161,8 @@ defmodule API do
       # *Note: May have more than one timeslot with the (1).
       # This will probably be reflected as a one-to-many Section to Timeslots
       # in Phoenix.
+      # Additionally, gotta split on the timeslots by their start time, end
+      # times, and days of the week.
       # Gotta parse this and make the timeslots for real, for reals. u_u 
       {_, _, eleventh_cell} = Enum.at(first_section, 10)
       timeslots = String.strip(List.first(eleventh_cell))
