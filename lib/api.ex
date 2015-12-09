@@ -59,18 +59,33 @@ defmodule API do
   Fetches the HTML for the designated term and dept
   """
   def fetch_term_dept_html(term, dept) do
-      html = HTTPoison.post!(@base_url,
+      html =
+      HTTPoison.post!("#{@base_url}?TERM=201600&DIVS=A&CAMPUS=M&SUBJ=ACCT&ATTR=0ANY&CREDIT=A",
       "{
-        \"TERM\": \"#{term}\",
-        \"DIVS\": \"A\",
-        \"CAMPUS\": \"M\",
-        \"CREDIT\": \"A\",
-        \"SUBJ\": \"#{dept}\",
-        \"ATTR\": \"0ANY\"
+        \"TERM\": 201600,
+        \"DIVS\": A,
+        \"CAMPUS\": M,
+        \"SUBJ\": ACCT,
+        \"ATTR\": 0ANY,
+        \"CREDIT\": A,
       }",
-      [{"Content-Type", "application/x-www-form-urlencoded"}]
-    ).body
+      ["Content-Type":
+      "application/x-www-form-urlencoded"]
+    )
 
+  end
+
+  @doc """
+  Fetches the HTML for the first term and department
+  """
+  def fetch_first() do 
+    terms = fetch_terms
+    depts = fetch_departments
+
+    first_term = List.first(terms)
+    first_dept = List.first(depts)
+
+    fetch_term_dept_html(first_term['value'], first_dept['value'])
   end
 end
 
