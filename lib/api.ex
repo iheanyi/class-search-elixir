@@ -28,7 +28,7 @@ defmodule API do
     |> Enum.map(fn term -> 
         term_value = Floki.attribute(term, "value")
         |> List.first
-        term_name = Floki.text(term)
+        term_name = String.strip(Floki.text(term))
       
         # Let's return a JSON mapping of all of the terms.
         %{name: term_name, value: term_value}
@@ -330,7 +330,16 @@ defmodule API do
   Fetches the courses for every single term and department.
   """
   def fetch_all_courses() do 
+    terms = fetch_terms
+    depts = fetch_departments
 
+    Enum.each(terms, fn term -> 
+      IO.puts term.value
+      Enum.each(depts, fn dept -> 
+        fetch_term_dept_html(term.value, dept.value)
+      end)
+    end
+    )
   end
 
   def process_course_html(html) do 
