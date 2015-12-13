@@ -241,7 +241,8 @@ defmodule API do
   Fetches the HTML for the designated term and dept
   """
   def fetch_term_dept_html(term, dept) do
-      content_type = %{"Content-type" => "application/x-www-form-urlencoded"}
+      content_type = %{"Content-type" =>
+        "application/x-www-form-urlencoded;charset=utf-8"}
       html =
       HTTPoison.post!(@base_url,
       {:form , [
@@ -271,22 +272,13 @@ defmodule API do
   def fetch_all_courses() do 
     terms = fetch_terms
     depts = fetch_departments
-
-    first_term = terms
-    |> List.first
     
-    IO.puts first_term.name
-    Enum.each(depts, fn dept -> 
-      fetch_term_dept_html(first_term.value, dept.value)
+    Enum.each(terms, fn term -> 
+      IO.puts term.value
+      Enum.each(depts, fn dept -> 
+        fetch_term_dept_html(term.value, dept.value)
+      end)
     end)
-
-
-    #Enum.each(terms, fn term -> 
-    #  IO.puts term.value
-    #  Enum.each(depts, fn dept -> 
-    #    fetch_term_dept_html(term.value, dept.value)
-    #  end)
-    #end)
   end
 
   def process_course_html(html) do 
