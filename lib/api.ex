@@ -93,13 +93,12 @@ defmodule API do
  
       # Second Cell - Course Title
       {_, _, second_cell} = Enum.at(first_section, 1)
-      course_title = List.first(second_cell)
-      #{_, _, course_title_text} = Enum.at(second_cell, 0)
-     
-      #course_title = List.first(course_title_text)
-      #{_, _, course_title_text} = Enum.at(second_cell, 0)
-      #course_title = List.first(course_title_text)
-
+      # This converts the binary of the char list back to the binary of the
+      # string. Somewhere in a library, the String is getting improperly encoded
+      # to a char_list, which is messing up UTf-8. This fixes it.
+      course_title = List.first(second_cell) |> :binary.bin_to_list |> to_string
+      
+            
       # Third Cell - Credits
       {_, _, third_cell} = Enum.at(first_section, 2)
       credits = List.first(third_cell) 
@@ -210,7 +209,6 @@ defmodule API do
       |> Utils.filter_binary_and_strip
       
       location = String.strip(List.first(fourteenth_cell))
-      
       IO.puts "#{course_num} - #{course_section} - #{course_title}"
       IO.puts "CRN #{course_reg_number}"
       IO.puts "Timeslots: #{timeslots}"
