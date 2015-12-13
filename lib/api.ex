@@ -148,7 +148,8 @@ defmodule API do
           # Additionally, we want to capture the instructor's names.
           instructor_full_name = Floki.text(tag)
           {html_tag, html_attributes, html_text} = tag
-          instructor_name_text = List.first(html_text)
+          # See note for Course Title
+          instructor_name_text = List.first(html_text) |> :binary.bin_to_list |> to_string
           IO.puts instructor_name_text
           instructor_name_array = instructor_name_text 
           |> String.strip 
@@ -273,9 +274,11 @@ defmodule API do
     
     Enum.each(terms, fn term -> 
       IO.puts term.value
-      Enum.each(depts, fn dept -> 
-        fetch_term_dept_html(term.value, dept.value)
-      end)
+      Task.start_link fn ->
+        Enum.each(depts, fn dept -> 
+          fetch_term_dept_html(term.value, dept.value)
+        end)
+      end
     end)
   end
 
