@@ -1,4 +1,5 @@
 defmodule API do
+  alias Utils
   @base_url "https://class-search.nd.edu/reg/srch/ClassSearchServlet"
 
   @doc """
@@ -136,14 +137,16 @@ defmodule API do
       instructors = Enum.map(tenth_cell, fn tag ->
         # If it is a tuple tag, then we are dealing with valid instructors and
         # not TBA instructors.
-        if (is_tuple tag) do 
+        if (is_tuple tag) do   
           # We know we have links in this.
+          # We want to capture the instructor id
+          # So we don't have namespacing issues.
           {_, hrefs, _} = tag
           {_, href} = List.first(hrefs) # Grab first HREF
-          IO.puts href
           instructor_id_map = Regex.named_captures(~r/P\=(?<id>\d+)/, href)
           instructor_id = instructor_id_map["id"]
-          IO.puts instructor_id
+          
+          # Additionally, we want to capture the instructor's names.
           instructor_full_name = Floki.text(tag)
           {html_tag, html_attributes, html_text} = tag
           instructor_name_text = List.first(html_text)
@@ -177,13 +180,7 @@ defmodule API do
       # times, and days of the week.
       # Gotta parse this and make the timeslots for real, for reals. u_u 
       {_, _, eleventh_cell} = Enum.at(first_section, 10)
-      filtered_times = eleventh_cell
-      |> Enum.filter_map(fn(x) -> (is_binary x) end, &(&1))
-      times = filtered_times
-      |> Enum.map(fn time -> 
-          time_text = String.strip(time)
-          time_text
-      end)
+      times = Utils.filter_binary_and_strip(eleventh_cell) #filtered_times
 
       timeslots = String.strip(List.first(eleventh_cell))
 
@@ -193,9 +190,7 @@ defmodule API do
       # difficult.
       {_, _, twelfth_cell} = Enum.at(first_section, 11)
       begin_dates = twelfth_cell
-      |> Enum.filter_map(fn(x) -> (is_binary x) end, fn(date) -> 
-        clean_date = String.strip(date)
-      end)
+      |> Utils.filter_binary_and_strip
       
       begin_date = String.strip(List.first(twelfth_cell))
 
@@ -203,10 +198,8 @@ defmodule API do
       # *Note: May have more than one end date, ala Timeslots.
       {_, _, thirteenth_cell} = Enum.at(first_section, 12)
       end_dates = thirteenth_cell
-      |> Enum.filter_map(fn(x) -> (is_binary x) end, fn(date) -> 
-        clean_date = String.strip(date)
-      end)
-
+      |> Utils.filter_binary_and_strip
+      
       end_date = String.strip(List.first(thirteenth_cell))
 
 
@@ -214,10 +207,8 @@ defmodule API do
       # * Note - May have more than one location, break on splits fam. 
       {_, _, fourteenth_cell} = Enum.at(first_section, 13)
       locations = fourteenth_cell
-      |> Enum.filter_map(fn(x) -> (is_binary x) end, fn(location) -> 
-        clean_location = String.strip(location)
-      end)
-
+      |> Utils.filter_binary_and_strip
+      
       location = String.strip(List.first(fourteenth_cell))
       
       IO.puts "#{course_num} - #{course_section} - #{course_title}"
