@@ -133,22 +133,30 @@ defmodule API do
       {_, _, tenth_cell} = Enum.at(first_section, 9)
       
       # Define instructors as an array
-      instructors = Enum.map(tenth_cell, fn tag -> 
-        IO.puts "In the map"
-        IO.puts (is_tuple tag)
+      instructors = Enum.map(tenth_cell, fn tag ->
+        # If it is a tuple tag, then we are dealing with valid instructors and
+        # not TBA instructors.
         if (is_tuple tag) do 
           # We know we have links in this.
+          {_, hrefs, _} = tag
+          {_, href} = List.first(hrefs) # Grab first HREF
+          IO.puts href
+          instructor_id_map = Regex.named_captures(~r/P\=(?<id>\d+)/, href)
+          instructor_id = instructor_id_map["id"]
+          IO.puts instructor_id
           instructor_full_name = Floki.text(tag)
           {html_tag, html_attributes, html_text} = tag
           instructor_name_text = List.first(html_text)
-          instructor_name_array = String.split(instructor_name_text, ", ", trim: true)
+          IO.puts instructor_name_text
+          instructor_name_array = instructor_name_text 
+          |> String.strip 
+          |> String.split(", ", trim: true) #String.split(instructor_name_text, ", ", trim: true)
           [instructor_last, instructor_first] = instructor_name_array
           instructor = "#{instructor_first} #{instructor_last}"
         else 
           # The instructor will probably be TBA -_-
           instructor = "TBA"
         end
-        IO.puts instructor 
         instructor
       end)
       
@@ -169,6 +177,14 @@ defmodule API do
       # times, and days of the week.
       # Gotta parse this and make the timeslots for real, for reals. u_u 
       {_, _, eleventh_cell} = Enum.at(first_section, 10)
+      filtered_times = eleventh_cell
+      |> Enum.filter_map(fn(x) -> (is_binary x) end, &(&1))
+      times = filtered_times
+      |> Enum.map(fn time -> 
+          time_text = String.strip(time)
+          time_text
+      end)
+
       timeslots = String.strip(List.first(eleventh_cell))
 
       # Tweltfhh Cell - Begin Date
@@ -176,27 +192,58 @@ defmodule API do
       # timeslot. :/ Gotta do that some magic here. Luckily, shouldn't be as
       # difficult.
       {_, _, twelfth_cell} = Enum.at(first_section, 11)
+      begin_dates = twelfth_cell
+      |> Enum.filter_map(fn(x) -> (is_binary x) end, fn(date) -> 
+        clean_date = String.strip(date)
+      end)
+      
       begin_date = String.strip(List.first(twelfth_cell))
 
       # Thirteenth Cell - End Date
       # *Note: May have more than one end date, ala Timeslots.
       {_, _, thirteenth_cell} = Enum.at(first_section, 12)
+      end_dates = thirteenth_cell
+      |> Enum.filter_map(fn(x) -> (is_binary x) end, fn(date) -> 
+        clean_date = String.strip(date)
+      end)
+
       end_date = String.strip(List.first(thirteenth_cell))
 
 
       # Fourteenth Cell - Where
       # * Note - May have more than one location, break on splits fam. 
       {_, _, fourteenth_cell} = Enum.at(first_section, 13)
+      locations = fourteenth_cell
+      |> Enum.filter_map(fn(x) -> (is_binary x) end, fn(location) -> 
+        clean_location = String.strip(location)
+      end)
+
       location = String.strip(List.first(fourteenth_cell))
       
       IO.puts "#{course_num} - #{course_section} - #{course_title}"
       IO.puts "CRN #{course_reg_number}"
       IO.puts "Timeslots: #{timeslots}"
+      IO.puts "Times: #{Enum.join(times, ", ")}"
       IO.puts "Instructor(s): #{Enum.join(instructors, ", ")}"
       IO.puts "#{credits} credits, #{open_seats}/#{max_seats} seats left"
       IO.puts "Starts #{begin_date} and Ends #{end_date}"
       IO.puts "Location: #{location}"
       IO.puts "Books Link: #{course_books_link}"
+      course_section_obj = %{
+        name: course_title,
+        section: course_section,
+        course_number: course_num,
+        timeslots: timeslots,
+        times: "#{Enum.join(times, ", ")}",
+        credits: credits,
+        open_seats: open_seats,
+        max_seats: max_seats,
+        begin_date: begin_date,
+        end_date: end_date,
+        location: location,
+        books_link: course_books_link,
+        instructors: instructors
+      }
   end
 
   @doc """
@@ -270,7 +317,8 @@ defmodule API do
 
     IO.puts "Fetching Term Department stuff"
     IO.puts(first_term_value)
-    fetch_term_dept_html(first_term_value, first_dept_value)
+    output = fetch_term_dept_html(first_term_value, first_dept_value)
+    List.first(output)
   end
 end
 
