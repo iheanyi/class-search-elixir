@@ -1,6 +1,7 @@
 defmodule API do
   alias Utils
   @base_url "https://class-search.nd.edu/reg/srch/ClassSearchServlet"
+  @base_desc_url "https://class-search.nd.edu/reg/srch/ClassSearchServlet"
 
   @doc """
   Initialize the initial page and everything.
@@ -59,7 +60,7 @@ defmodule API do
   @doc """
   Processes the HTML for a course row.
   """
-  def process_section_html(first_section) do
+  def process_section_html(first_section, term, dept) do
       # Each Cell/Index
       # (0) Course Section and Course Number, also has URL link to the books
       # relevant to that section in Hammes Bookstore.
@@ -225,6 +226,8 @@ defmodule API do
         course_number: course_num,
         timeslots: timeslots,
         times: "#{Enum.join(times, ", ")}",
+        crn: course_reg_number,
+        term: term,
         credits: credits,
         open_seats: open_seats,
         max_seats: max_seats,
@@ -259,7 +262,7 @@ defmodule API do
 
       course_sections
       |> Enum.map(fn {_, _, section} -> 
-        process_section_html(section)
+        process_section_html(section, term, dept)
       end
       )
 
@@ -282,8 +285,40 @@ defmodule API do
     end)
   end
 
-  def process_course_html(html) do 
-  
+  @doc """
+  Processees the HTML for the Course Description.
+  """
+  def process_course_description_html(html) do 
+    {_, _, course_description_table} = Floki.find(html, ".datadisplaytable")
+    |> List.first
+
+    [_, description_row] = course_description_table 
+    {_, _, description_children} = description_row
+
+    description_nodes = description_children
+    |> List.first
+    |> Tuple.to_list
+    |> List.last
+    |> Enum.filter_map(fn item -> is_binary item end, fn item ->
+      String.strip(item)
+    end)
+
+    course_description = List.first(description_nodes)
+    IO.puts description_nodes  #course_description_table
+    IO.puts course_description
+    description_nodes
+  end
+
+  @doc """
+  Fetch the HTML for the Course Description page.
+  """
+  def fetch_course_description(term, crn) do
+    # Append the CRN and Term to the base_desc_url
+    full_url = "#{@base_desc_url}?CRN=#{crn}&TERM=#{term}"
+    
+    # Fetch course description HTML here and parse it.
+    html = HTTPoison.get!(full_url).body
+    process_course_description_html(html)
   end
 
   @doc """
@@ -302,7 +337,8 @@ defmodule API do
     IO.puts "Fetching Term Department stuff"
     IO.puts(first_term_value)
     output = fetch_term_dept_html(first_term_value, first_dept_value)
-    List.first(output)
+    first_item = List.first(output)
+    fetch_course_description(first_item.term, first_item.crn)
   end
 end
 
