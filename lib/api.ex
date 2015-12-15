@@ -269,19 +269,52 @@ defmodule API do
   end
 
   @doc """
+  Fetches the attributes for every single course.
+  """
+  def fetch_attributes do 
+    html = fetch_initial_page
+    
+    attributes = Floki.find(html, "select[name=ATTR] option")
+    |> Enum.map(fn attr -> 
+        attr_value = Floki.attribute(attr, "value")
+        |> List.first
+        attr_name = String.strip(Floki.text(attr))
+      
+        # Let's return a JSON mapping of all of the terms.
+        %{name: attr_name, value: attr_value}
+      end
+    ) 
+  end
+
+  @doc """
   Fetches the courses for every single term and department.
   """
-  def fetch_all_courses() do 
+  def fetch_all_courses do 
     terms = fetch_terms
+    |> Enum.slice(0..1)
     depts = fetch_departments
     
-    Enum.each(terms, fn term -> 
+    all_courses = Enum.map(terms, fn term -> 
       IO.puts term.value
-      Task.start_link fn ->
-        Enum.each(depts, fn dept -> 
-          fetch_term_dept_html(term.value, dept.value)
+      #Task.start_link fn ->
+        courses = Enum.map(depts, fn dept -> 
+          dept_courses = fetch_term_dept_html(term.value, dept.value)
+          %{
+            dept: %{
+              name: dept.name,
+              value: dept.value,
+            },
+            courses: dept_courses,
+          }
         end)
-      end
+        #end
+        %{
+          term: %{
+            name: term.name,
+            value: term.value,
+          },
+          dept_courses: courses,
+        }
     end)
   end
 
