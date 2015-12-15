@@ -304,9 +304,7 @@ defmodule API do
     end)
 
     course_description = List.first(description_nodes)
-    IO.puts description_nodes  #course_description_table
-    IO.puts course_description
-    description_nodes
+    course_description
   end
 
   @doc """
